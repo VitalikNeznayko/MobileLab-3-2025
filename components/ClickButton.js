@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Dimensions, Animated } from "react-native";
 import {
   GestureHandlerRootView,
   TapGestureHandler,
@@ -15,7 +15,6 @@ export default function ClickButton({
   onTap,
   onDoubleTap,
   onLongPress,
-  onPan,
   onFling,
   onPinch,
 }) {
@@ -23,17 +22,36 @@ export default function ClickButton({
   const [isPanActivated, setIsPanActivated] = useState(false);
   const [panTimeout, setPanTimeout] = useState(null);
 
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const [offsetX, setoffsetX] = useState(0);
+  const [offsetY, setoffsetY] = useState(0);
+
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+  const objectSize = 100;
+
+  const minX = -screenWidth / 2 + objectSize;
+  const maxX = screenWidth / 2 - objectSize;
+  const minY = -screenHeight / 2 + objectSize;
+  const maxY = screenHeight / 2 - objectSize;
+
   const panRef = useRef();
   const flingRightRef = useRef();
   const flingLeftRef = useRef();
   const doubleTapRef = useRef();
   const longPressRef = useRef();
 
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const resetTimeout = useRef(null);
+
   const updateActiveGesture = (gesture) => {
     if (activeGesture !== gesture) {
       setActiveGesture(gesture);
     }
   };
+
   const handleSingleTap = (event) => {
     if (event.nativeEvent.state === 4) {
       updateActiveGesture("tap");
@@ -56,42 +74,80 @@ export default function ClickButton({
   };
 
   const handlePanGesture = (event) => {
-    const { state } = event.nativeEvent;
+    const newX = offsetX + event.nativeEvent.translationX;
+    const newY = offsetY + event.nativeEvent.translationY;
 
-    if (state === 4) {
-      setIsPanActivated(false);
-      if (panTimeout) {
-        clearTimeout(panTimeout);
-        setPanTimeout(null);
-      }
-    }
+    const boundedX = Math.max(minX, Math.min(maxX, newX));
+    const boundedY = Math.max(minY, Math.min(maxY, newY));
 
-    if (state === 2 && !isPanActivated) {
-      if (!panTimeout) {
-        setIsPanActivated(true);
-        onPan();
+    Animated.timing(translateX, {
+      toValue: boundedX,
+      duration: 0,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.timing(translateY, {
+      toValue: boundedY,
+      duration: 0,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePanStateChange = (event) => {
+    if (event.nativeEvent.state === 5) {
+      if (resetTimeout.current) {
+        clearTimeout(resetTimeout.current);
       }
+
+      resetTimeout.current = setTimeout(() => {
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      }, 2000);
     }
   };
 
   const handleFlingRight = (event) => {
     if (event.nativeEvent.state === 4) {
       onFling();
+      setPosition((prev) => ({ ...prev, x: prev.x + 30 }));
+      setTimeout(() => setPosition({ x: 0, y: 0 }), 500);
     }
   };
 
   const handleFlingLeft = (event) => {
     if (event.nativeEvent.state === 4) {
       onFling();
+      setPosition((prev) => ({ ...prev, x: prev.x - 30 }));
+      setTimeout(() => setPosition({ x: 0, y: 0 }), 500);
     }
   };
 
   const handlePinch = (event) => {
-    onPinch();
+    setScale(event.nativeEvent.scale);
   };
+
+  const handlePinchStateChange = (event) => {
+    if (event.nativeEvent.state === 5) {
+      updateActiveGesture("pinch");
+      setScale(1);
+    }
+  };
+
   return (
     <GestureHandlerRootView>
-      <PinchGestureHandler onGestureEvent={handlePinch}>
+      <PinchGestureHandler
+        onGestureEvent={handlePinch}
+        onHandlerStateChange={handlePinchStateChange}
+      >
         <FlingGestureHandler
           ref={flingRightRef}
           direction={Directions.RIGHT}
@@ -107,8 +163,8 @@ export default function ClickButton({
             <PanGestureHandler
               ref={panRef}
               onGestureEvent={handlePanGesture}
-              onHandlerStateChange={handlePanGesture}
-              minDist={240}
+              onHandlerStateChange={handlePanStateChange}
+              minDist={20}
               simultaneousHandlers={[flingRightRef, flingLeftRef]}
             >
               <LongPressGestureHandler
@@ -127,7 +183,15 @@ export default function ClickButton({
                     onHandlerStateChange={handleDoubleTap}
                     numberOfTaps={2}
                   >
-                    <Button>
+                    <Button
+                      style={{
+                        transform: [
+                          { translateX: translateX },
+                          { translateY: translateY },
+                          { scale: scale },
+                        ],
+                      }}
+                    >
                       <TextButton>Click Me</TextButton>
                     </Button>
                   </TapGestureHandler>
@@ -140,16 +204,16 @@ export default function ClickButton({
     </GestureHandlerRootView>
   );
 }
+
 const Button = styled.TouchableOpacity`
   background: rgb(255, 0, 0);
   width: 200px;
   height: 200px;
-  padding: 20px;
   border-radius: 100px;
   align-items: center;
   justify-content: center;
-  margin: 150px;
 `;
+
 const TextButton = styled.Text`
   color: white;
   font-size: 20px;

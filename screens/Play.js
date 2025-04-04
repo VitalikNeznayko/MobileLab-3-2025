@@ -53,6 +53,7 @@ export default function Play() {
 }
 
 const Container = styled.View`
+
   padding-top: 150px;
   flex: 1;
   justify-content: center;

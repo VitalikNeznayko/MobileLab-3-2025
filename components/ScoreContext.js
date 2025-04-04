@@ -8,8 +8,8 @@ export const ScoreProvider = ({ children }) => {
     singleClick: 0,
     doubleClick: 0,
     longPress: 0,
-    drag: 0,
-    swipe: 0,
+    swipeLeft: 0,
+    swipeRight: 0,
     pinch: 0,
   });
 
@@ -24,21 +24,9 @@ export const ScoreProvider = ({ children }) => {
     }));
   };
 
-  const resetScore = () => {
-    setScore(0);
-    setActions({
-      singleClick: 0,
-      doubleClick: 0,
-      longPress: 0,
-      drag: 0,
-      swipe: 0,
-      pinch: 0,
-    });
-  };
-
   return (
     <ScoreContext.Provider
-      value={{ score, actions, incrementScore, incrementAction, resetScore }}
+      value={{ score, actions, incrementScore, incrementAction}}
     >
       {children}
     </ScoreContext.Provider>
