@@ -1,13 +1,20 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { ThemeProvider } from "styled-components";
 import MainTabs from "./components/MainTabs";
+import { ScoreProvider } from "./components/ScoreContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <MainTabs />
-    </NavigationContainer>
+    <GestureHandlerRootView>
+      <ScoreProvider>
+        <>
+          <NavigationContainer>
+            <MainTabs />
+          </NavigationContainer>
+        </>
+      </ScoreProvider>
+    </GestureHandlerRootView>
   );
 };
 
