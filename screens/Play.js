@@ -23,15 +23,19 @@ export default function Play() {
   };
 
   const handlePan = () => {
-    incrementAction("drag");
+    incrementAction("pan");
     incrementScore(4);
   };
 
-  const handleFling = () => {
-    incrementAction("swipe");
+  const handleFlingRight = () => {
+    incrementAction("flingRight");
     incrementScore(3);
   };
 
+  const handleFlingLeft = () => {
+    incrementAction("flingLeft");
+    incrementScore(3);
+  };
   const handlePinch = () => {
     incrementAction("pinch");
     incrementScore(1);
@@ -45,7 +49,8 @@ export default function Play() {
         onDoubleTap={handleDoubleTap}
         onLongPress={handleLongPress}
         onPan={handlePan}
-        onFling={handleFling}
+        onFlingRight={handleFlingRight}
+        onFlingLeft={handleFlingLeft}
         onPinch={handlePinch}
       />
     </Container>
@@ -53,7 +58,6 @@ export default function Play() {
 }
 
 const Container = styled.View`
-
   padding-top: 150px;
   flex: 1;
   justify-content: center;

@@ -8,9 +8,10 @@ export const ScoreProvider = ({ children }) => {
     singleClick: 0,
     doubleClick: 0,
     longPress: 0,
-    swipeLeft: 0,
-    swipeRight: 0,
+    flingRight: 0,
+    flingLeft: 0,
     pinch: 0,
+    pan: 0,
   });
 
   const incrementScore = (points) => {

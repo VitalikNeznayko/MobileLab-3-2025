@@ -15,12 +15,12 @@ export default function ClickButton({
   onTap,
   onDoubleTap,
   onLongPress,
-  onFling,
+  onPan,
+  onFlingLeft,
+  onFlingRight,
   onPinch,
 }) {
   const [activeGesture, setActiveGesture] = useState(null);
-  const [isPanActivated, setIsPanActivated] = useState(false);
-  const [panTimeout, setPanTimeout] = useState(null);
 
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
@@ -74,6 +74,8 @@ export default function ClickButton({
   };
 
   const handlePanGesture = (event) => {
+    updateActiveGesture("pan");
+
     const newX = offsetX + event.nativeEvent.translationX;
     const newY = offsetY + event.nativeEvent.translationY;
 
@@ -95,6 +97,7 @@ export default function ClickButton({
 
   const handlePanStateChange = (event) => {
     if (event.nativeEvent.state === 5) {
+        onPan();
       if (resetTimeout.current) {
         clearTimeout(resetTimeout.current);
       }
@@ -117,17 +120,19 @@ export default function ClickButton({
 
   const handleFlingRight = (event) => {
     if (event.nativeEvent.state === 4) {
-      onFling();
+      onFlingRight();
       setPosition((prev) => ({ ...prev, x: prev.x + 30 }));
       setTimeout(() => setPosition({ x: 0, y: 0 }), 500);
+      updateActiveGesture("flingRight");
     }
   };
 
   const handleFlingLeft = (event) => {
     if (event.nativeEvent.state === 4) {
-      onFling();
+      onFlingLeft();
       setPosition((prev) => ({ ...prev, x: prev.x - 30 }));
       setTimeout(() => setPosition({ x: 0, y: 0 }), 500);
+      updateActiveGesture("flingLeft");
     }
   };
 
@@ -137,7 +142,7 @@ export default function ClickButton({
 
   const handlePinchStateChange = (event) => {
     if (event.nativeEvent.state === 5) {
-      updateActiveGesture("pinch");
+      onPinch();
       setScale(1);
     }
   };
@@ -164,7 +169,7 @@ export default function ClickButton({
               ref={panRef}
               onGestureEvent={handlePanGesture}
               onHandlerStateChange={handlePanStateChange}
-              minDist={20}
+              minDist={30}
               simultaneousHandlers={[flingRightRef, flingLeftRef]}
             >
               <LongPressGestureHandler
@@ -212,6 +217,7 @@ const Button = styled.TouchableOpacity`
   border-radius: 100px;
   align-items: center;
   justify-content: center;
+  margin-top: 50px;
 `;
 
 const TextButton = styled.Text`
